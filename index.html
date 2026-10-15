@@ -180,6 +180,32 @@
       text-transform: uppercase;
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      gap: 9px;
+    }
+
+    .visitor-pill {
+      flex: 0 0 auto;
+      padding: 8px 12px;
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      color: #24775f;
+      background: rgba(205, 255, 237, 0.42);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+      font-size: 0.72rem;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .visitor-pill strong {
+      color: var(--ink);
+      font-variant-numeric: tabular-nums;
+    }
+
     .status-pill {
       flex: 0 0 auto;
       padding: 8px 12px;
@@ -958,6 +984,17 @@
       background: rgba(255, 255, 255, 0.38);
     }
 
+    .monetag-zone {
+      display: grid;
+      min-height: 44px;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.62);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.24);
+      pointer-events: auto;
+    }
+
     .ad-content {
       order: 0;
       padding: 8px 6px 4px;
@@ -1092,7 +1129,13 @@
         padding: 18px;
       }
 
-      .status-pill {
+      .header-actions {
+        align-items: flex-start;
+        justify-content: flex-start;
+      }
+
+      .status-pill,
+      .visitor-pill {
         align-self: flex-start;
       }
 
@@ -1141,9 +1184,14 @@
         </div>
       </div>
 
-      <div class="status-pill">
-        <span class="status-dot" aria-hidden="true"></span>
-        Calculated locally
+      <div class="header-actions">
+        <div class="status-pill">
+          <span class="status-dot" aria-hidden="true"></span>
+          Calculated locally
+        </div>
+        <div class="visitor-pill" aria-live="polite">
+          Live Visitors Today: <strong id="visitor-count">1</strong>
+        </div>
       </div>
     </header>
 
@@ -1383,6 +1431,10 @@
           <p>Sponsor Message · Reach independent professionals building their next chapter.</p>
         </div>
 
+        <div class="monetag-zone" aria-label="Monetag advertising zone">
+          <script src="https://quge5.com/88/tag.min.js" data-zone="295894" async data-cfasync="false"></script>
+        </div>
+
         <article class="static-ad figma">
           <div class="ad-kicker">Creative workflow</div>
           <h4>Figma Pro for Freelancers</h4>
@@ -1405,6 +1457,31 @@
   <script>
     (() => {
       "use strict";
+
+      function updateVisitorCount() {
+        const countElement = document.getElementById("visitor-count");
+        if (!countElement) return;
+
+        const dayKey = new Date().toISOString().slice(0, 10);
+        const counterKey = `freelance-runway-visitors-${dayKey}`;
+        const sessionKey = `freelance-runway-visitor-session-${dayKey}`;
+        let count = 1;
+
+        try {
+          count = Number.parseInt(localStorage.getItem(counterKey) || "0", 10);
+          if (!Number.isFinite(count) || count < 0) count = 0;
+          if (!sessionStorage.getItem(sessionKey)) {
+            count += 1;
+            localStorage.setItem(counterKey, String(count));
+            sessionStorage.setItem(sessionKey, "counted");
+          }
+        } catch (error) {
+          // Storage can be unavailable in private browsing; show a safe local fallback.
+          count = 1;
+        }
+
+        countElement.textContent = String(Math.max(1, count));
+      }
 
       const savingsInput = document.getElementById("savings");
       const expensesInput = document.getElementById("expenses");
@@ -1675,6 +1752,7 @@
         printReport.addEventListener("click", () => window.print());
       }
 
+      updateVisitorCount();
       addProjectRow();
       calculateRunway();
     })();
